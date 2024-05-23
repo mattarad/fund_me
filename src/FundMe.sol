@@ -4,7 +4,8 @@ pragma solidity 0.8.24;
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {PriceConverter} from "./PriceConverter.sol";
 
-error NotOwner();
+error FundMe__NotOwner();
+error FundMe__EthBelowMin();
 
 /**
  * @title A sample Funding Contract
@@ -32,17 +33,16 @@ contract FundMe {
     }
 
     modifier onlyOwner() {
-        if (msg.sender != i_owner) revert NotOwner();
+        if (msg.sender != i_owner) revert FundMe__NotOwner();
         _;
     }
 
     function fund() public payable {
-        require(
-            msg.value.getConversionRate(priceFeed) >= MINIMUM_USD,
-            "You need to send more ETH"
-        );
+        if (msg.value.getConversionRate(priceFeed) >= MINIMUM_USD) {
+            revert FundMe__EthBelowMin();
+        }
         addressToAmountFunded[msg.sender] += msg.value;
-        funders.push(msg.msg.sender);
+        funders.push(msg.sender);
     }
 
     function withdraw() public onlyOwner {
@@ -80,7 +80,7 @@ contract FundMe {
         return priceFeed.version();
     }
 
-    function getAllFunders() public view returns (address[]) {
+    function getAllFunders() public view returns (address[] memory) {
         return funders;
     }
 
