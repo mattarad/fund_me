@@ -15,9 +15,7 @@ contract HelperConfig is Script {
     }
 
     constructor() {
-        activeNetworkConfig = block.chainid == 11155111
-            ? getSepoliaEthConfig()
-            : getOrCreateAnvilEthConfig();
+        activeNetworkConfig = block.chainid == 11155111 ? getSepoliaEthConfig() : getOrCreateAnvilEthConfig();
     }
 
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
@@ -30,10 +28,7 @@ contract HelperConfig is Script {
         }
 
         vm.startBroadcast();
-        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
-            DECIMALS,
-            INITIAL_PRICE
-        );
+        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
         vm.stopBroadcast();
 
         return NetworkConfig(address(mockPriceFeed));

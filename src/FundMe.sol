@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {PriceConverter} from "./PriceConverter.sol";
 import {Test, console} from "forge-std/Test.sol";
+
 error FundMe__NotOwner();
 error FundMe__EthBelowMin();
 
@@ -49,7 +50,7 @@ contract FundMe {
     }
 
     function withdraw() public onlyOwner {
-        for (uint256 funderIndex = 0; funderIndex < funders.length; ) {
+        for (uint256 funderIndex = 0; funderIndex < funders.length;) {
             address funder = funders[funderIndex];
             addressToAmountFunded[funder] = 0;
             unchecked {
@@ -58,9 +59,7 @@ contract FundMe {
         }
         funders = new address[](0);
 
-        (bool callSuccess, ) = payable(msg.sender).call{
-            value: address(this).balance
-        }("");
+        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
         if (!callSuccess) revert();
     }
 
@@ -69,13 +68,13 @@ contract FundMe {
         uint256 funderLenght = funders.length;
 
         funders = new address[](0);
-        for (uint256 funderIndex = 0; funderIndex < funderLenght; ) {
+        for (uint256 funderIndex = 0; funderIndex < funderLenght;) {
             addressToAmountFunded[_funders[funderIndex]] = 0;
             unchecked {
                 funderIndex++;
             }
         }
-        (bool success, ) = i_owner.call{value: address(this).balance}("");
+        (bool success,) = i_owner.call{value: address(this).balance}("");
         require(success);
     }
 
@@ -83,13 +82,11 @@ contract FundMe {
      * View / Pure functions (getters)
      */
 
-    function getAddressToAmountFunded(
-        address fundingAddress
-    ) external view returns (uint) {
+    function getAddressToAmountFunded(address fundingAddress) external view returns (uint256) {
         return addressToAmountFunded[fundingAddress];
     }
 
-    function getFunder(uint index) external view returns (address) {
+    function getFunder(uint256 index) external view returns (address) {
         return funders[index];
     }
 
