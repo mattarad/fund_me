@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {PriceConverter} from "./PriceConverter.sol";
-
+import {Test, console} from "forge-std/Test.sol";
 error FundMe__NotOwner();
 error FundMe__EthBelowMin();
 
@@ -24,8 +24,9 @@ contract FundMe {
     address public immutable i_owner;
     uint256 public constant MINIMUM_USD = 5e18;
 
-    mapping(address => uint256) public addressToAmountFunded;
-    address[] public funders;
+    // made private for gas optimization
+    mapping(address => uint256) private addressToAmountFunded;
+    address[] private funders;
 
     constructor(address _priceFeed) {
         priceFeed = AggregatorV3Interface(_priceFeed);
@@ -38,7 +39,9 @@ contract FundMe {
     }
 
     function fund() public payable {
-        if (msg.value.getConversionRate(priceFeed) >= MINIMUM_USD) {
+        console.log(msg.value.getConversionRate(priceFeed));
+        console.log(msg.value.getConversionRate(priceFeed) / 1e8);
+        if (msg.value.getConversionRate(priceFeed) <= MINIMUM_USD) {
             revert FundMe__EthBelowMin();
         }
         addressToAmountFunded[msg.sender] += msg.value;
@@ -63,10 +66,10 @@ contract FundMe {
 
     function cheaperWithdraw() public onlyOwner {
         address[] memory _funders = funders;
-        uint funderLenght = funders.length;
+        uint256 funderLenght = funders.length;
 
         funders = new address[](0);
-        for (uint funderIndex = 0; funderIndex < funderLenght; ) {
+        for (uint256 funderIndex = 0; funderIndex < funderLenght; ) {
             addressToAmountFunded[_funders[funderIndex]] = 0;
             unchecked {
                 funderIndex++;
@@ -76,19 +79,33 @@ contract FundMe {
         require(success);
     }
 
-    function getVersion() public view returns (uint256) {
-        return priceFeed.version();
+    /*
+     * View / Pure functions (getters)
+     */
+
+    function getAddressToAmountFunded(
+        address fundingAddress
+    ) external view returns (uint) {
+        return addressToAmountFunded[fundingAddress];
+    }
+
+    function getFunder(uint index) external view returns (address) {
+        return funders[index];
     }
 
     function getAllFunders() public view returns (address[] memory) {
         return funders;
     }
 
-    function getOwner() public view returns (address) {
-        return i_owner;
+    function getVersion() public view returns (uint256) {
+        return priceFeed.version();
     }
 
     function getPriceFeed() public view returns (AggregatorV3Interface) {
         return priceFeed;
+    }
+
+    function getOwner() public view returns (address) {
+        return i_owner;
     }
 }
