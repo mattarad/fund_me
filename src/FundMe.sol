@@ -50,31 +50,35 @@ contract FundMe {
     }
 
     function withdraw() public onlyOwner {
-        for (uint256 funderIndex = 0; funderIndex < funders.length;) {
+        for (
+            uint256 funderIndex = 0;
+            funderIndex < funders.length;
+            funderIndex++
+        ) {
             address funder = funders[funderIndex];
             addressToAmountFunded[funder] = 0;
-            unchecked {
-                funderIndex++;
-            }
         }
         funders = new address[](0);
 
-        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
+        (bool callSuccess, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
         if (!callSuccess) revert();
     }
 
     function cheaperWithdraw() public onlyOwner {
         address[] memory _funders = funders;
-        uint256 funderLenght = funders.length;
+        // uint256 funderLength = funders.length;
+        uint256 funderLength = _funders.length; // see gas cost diff
 
         funders = new address[](0);
-        for (uint256 funderIndex = 0; funderIndex < funderLenght;) {
+        for (uint256 funderIndex; funderIndex < funderLength; ) {
             addressToAmountFunded[_funders[funderIndex]] = 0;
             unchecked {
                 funderIndex++;
             }
         }
-        (bool success,) = i_owner.call{value: address(this).balance}("");
+        (bool success, ) = i_owner.call{value: address(this).balance}("");
         require(success);
     }
 
@@ -82,7 +86,9 @@ contract FundMe {
      * View / Pure functions (getters)
      */
 
-    function getAddressToAmountFunded(address fundingAddress) external view returns (uint256) {
+    function getAddressToAmountFunded(
+        address fundingAddress
+    ) external view returns (uint256) {
         return addressToAmountFunded[fundingAddress];
     }
 

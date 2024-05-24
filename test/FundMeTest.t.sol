@@ -12,6 +12,7 @@ contract FundMeTest is Test {
     address USER = makeAddr("user");
     uint256 constant STARTING_BALANCE = 1000e18;
     uint256 fund_amount_modifier = 2e18;
+    uint256 constant GAS_PRICE = 10;
 
     function setUp() external {
         deployFundMe = new DeployFundMe();
@@ -106,6 +107,7 @@ contract FundMeTest is Test {
         // Arrange
         uint startingOwnerBalance = fundMe.getOwner().balance;
         uint startingFundMeBalance = address(fundMe).balance;
+
         // Act
         vm.prank(fundMe.getOwner());
         fundMe.withdraw();
@@ -123,7 +125,7 @@ contract FundMeTest is Test {
 
     function testWithdrawFromMultipleFunders() public funded {
         // address can only be created below using uint160
-        uint160 totalNumberOfFunders = 25;
+        uint160 totalNumberOfFunders = 100;
         for (uint160 i = 0; i < totalNumberOfFunders; i++) {
             hoax(address(i), STARTING_BALANCE);
             fundMe.fund{value: fund_amount_modifier}();
@@ -139,6 +141,35 @@ contract FundMeTest is Test {
 
         vm.prank(fundMe.getOwner());
         fundMe.withdraw();
+        vm.stopPrank();
+
+        uint endingOwnerBalance = fundMe.getOwner().balance;
+        uint endingFundMeBalance = address(fundMe).balance;
+        assertEq(
+            startingOwnerBalance + startingFundMeBalance,
+            endingOwnerBalance
+        );
+        assertEq(endingFundMeBalance, 0);
+    }
+
+    function testCheaperWithdrawFromMultipleFunders() public funded {
+        // address can only be created below using uint160
+        uint160 totalNumberOfFunders = 100;
+        for (uint160 i = 0; i < totalNumberOfFunders; i++) {
+            hoax(address(i), STARTING_BALANCE);
+            fundMe.fund{value: fund_amount_modifier}();
+        }
+
+        uint startingOwnerBalance = fundMe.getOwner().balance;
+        uint startingFundMeBalance = address(fundMe).balance;
+
+        assertEq(
+            startingFundMeBalance,
+            (totalNumberOfFunders * fund_amount_modifier) + fund_amount_modifier
+        ); // + fund_amount_modifier due to modifier being used.
+
+        vm.prank(fundMe.getOwner());
+        fundMe.cheaperWithdraw();
         vm.stopPrank();
 
         uint endingOwnerBalance = fundMe.getOwner().balance;
