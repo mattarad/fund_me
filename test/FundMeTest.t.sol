@@ -8,7 +8,7 @@ contract FundMeTest is Test {
     FundMe fundMe;
 
     function setUp() external {
-        fundMe = new FundMe(address(0));
+        fundMe = new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
     }
 
     function testMinimumDollarIsFive() public view {
@@ -29,6 +29,13 @@ contract FundMeTest is Test {
     function testPriceFeedAddress() public view {
         console.log("priceFeed:         ", address(fundMe.getPriceFeed()));
         console.log("address(0):        ", address(0));
-        assertEq(address(fundMe.getPriceFeed()), address(0));
+        assertEq(
+            address(fundMe.getPriceFeed()),
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+    }
+
+    function testPriceFeedVersionIsAccurate() public view {
+        console.log(fundMe.getVersion());
     }
 }
